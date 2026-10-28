@@ -4,6 +4,10 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+  # recompila sozinho quando o robô de radares termina (ele salva o radars.json novo)
+  workflow_run:
+    workflows: ['Atualizar radares']
+    types: [completed]
 
 jobs:
   build:
