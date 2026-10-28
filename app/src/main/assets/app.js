@@ -95,10 +95,85 @@ const $ = id => document.getElementById(id);
 
 /* ═════════════ MAPA ═════════════ */
 const map = L.map('map', { zoomControl: false, attributionControl: true, tap: false }).setView(CFG.center, 15);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  subdomains: 'abcd', maxZoom: 20,
-  attribution: '© OpenStreetMap · © CARTO · OSRM',
-}).addTo(map);
+/* ── MAPA BASE ──────────────────────────────────────────────────────────
+   Usamos o OpenFreeMap (grátis, sem chave). Ele manda o mapa em VETOR:
+   em vez de "fotos" prontas das ruas, chega o desenho (linhas e polígonos)
+   + um "estilo" (JSON) dizendo a cor de cada coisa. Nós baixamos esse estilo
+   e REPINTAMOS camada por camada no padrão Night City.
+   Se algo falhar (sem WebGL / sem internet), cai no OpenStreetMap comum.     */
+const PALETTE = {
+  'theme-arasaka':   { bg: '#07070d', land: '#0b0a12', park: '#0d1410', water: '#06121c', bldg: '#15121c', bldgLine: '#3a1420',
+                       major: '#ff003c', mid: '#ff5a1f', minor: '#6e1a2a', path: '#3a1520', casing: '#000000',
+                       label: '#e8d9dc', roadLabel: '#fcee0a', halo: '#000000' },
+  'theme-netrunner': { bg: '#05080d', land: '#070b12', park: '#08140f', water: '#061826', bldg: '#0d1520', bldgLine: '#123a48',
+                       major: '#00f0ff', mid: '#00a8c8', minor: '#14465a', path: '#10303c', casing: '#000000',
+                       label: '#d6eef5', roadLabel: '#fcee0a', halo: '#000000' },
+};
+let baseStyle = null, glLayer = null;
+
+function currentTheme() { return document.body.classList.contains('theme-netrunner') ? 'theme-netrunner' : 'theme-arasaka'; }
+
+// Recebe o estilo original e devolve uma cópia pintada com a paleta do tema
+function cyberStyle(style, theme) {
+  const P = PALETTE[theme], st = JSON.parse(JSON.stringify(style));
+  st.layers = st.layers.filter(l => l.type !== 'fill-extrusion' && l.type !== 'hillshade');   // tira prédios 3D e relevo
+  for (const l of st.layers) {
+    const id = l.id.toLowerCase(), sl = (l['source-layer'] || '').toLowerCase();
+    l.paint = l.paint || {};
+    if (l.type === 'background') { l.paint['background-color'] = P.bg; continue; }
+    if (l.type === 'fill') {
+      delete l.paint['fill-pattern'];
+      l.paint['fill-color'] = sl === 'water' ? P.water
+        : sl === 'building' ? P.bldg
+        : /park|wood|forest|grass|landcover|green|cemetery|pitch/.test(id + sl) ? P.park : P.land;
+      if (sl === 'building') l.paint['fill-outline-color'] = P.bldgLine;
+      l.paint['fill-opacity'] = 1;
+      continue;
+    }
+    if (l.type === 'line') {
+      delete l.paint['line-pattern'];
+      let c;
+      if (sl === 'waterway') c = P.water;
+      else if (sl === 'boundary') c = '#3b1d3f';
+      else if (/casing|outline/.test(id)) c = P.casing;
+      else if (/motorway|trunk/.test(id)) c = P.major;                     // rodovias = cor mais forte
+      else if (/primary|secondary/.test(id)) c = P.mid;                    // avenidas
+      else if (/rail|transit/.test(id)) c = '#2a2a3a';
+      else if (/path|pedestrian|footway|cycle|track|steps|service/.test(id)) c = P.path;
+      else if (sl === 'transportation' || /road|street|minor|tertiary|link/.test(id)) c = P.minor;
+      else c = P.minor;
+      l.paint['line-color'] = c;
+      continue;
+    }
+    if (l.type === 'symbol') {
+      l.paint['text-color'] = sl === 'transportation_name' ? P.roadLabel : P.label;
+      l.paint['text-halo-color'] = P.halo;
+      l.paint['text-halo-width'] = 1.4;
+      if (/poi/.test(id) || sl === 'poi') l.paint['icon-opacity'] = 0.45;
+    }
+  }
+  return st;
+}
+
+async function initBaseMap() {
+  const hasGL = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } })();
+  try {
+    if (!hasGL || !L.maplibreGL) throw new Error('sem WebGL');
+    baseStyle = await (await fetch('https://tiles.openfreemap.org/styles/liberty')).json();
+    glLayer = L.maplibreGL({
+      style: cyberStyle(baseStyle, currentTheme()),
+      attribution: '© OpenFreeMap © OpenMapTiles © OpenStreetMap · OSRM',
+    }).addTo(map);
+    map.attributionControl.addAttribution('© OpenFreeMap © OpenStreetMap');
+    document.body.classList.remove('raster');
+  } catch (e) {
+    console.warn('mapa vetorial falhou, usando OSM raster', e);
+    document.body.classList.add('raster');                // ativa o filtro CSS de reserva
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '© OpenStreetMap · OSRM' }).addTo(map);
+  }
+}
+initBaseMap();
 
 const radarLayer = L.layerGroup().addTo(map);
 const reportLayer = L.layerGroup().addTo(map);
@@ -524,8 +599,12 @@ function cancelRoute() {
 function setFollow(on) { S.follow = on; $('bFollow').classList.toggle('active', on); if (on && S.pos) map.setView(S.pos, Math.max(map.getZoom(), 17)); }
 $('bFollow').onclick = () => setFollow(!S.follow);
 $('bRadar').onclick = () => loadRadars(true);
-$('bTheme').onclick = () => { document.body.classList.toggle('theme-arasaka'); document.body.classList.toggle('theme-netrunner'); save('nc_theme', document.body.className); };
+$('bTheme').onclick = () => {
+  document.body.classList.toggle('theme-arasaka'); document.body.classList.toggle('theme-netrunner');
+  save('nc_theme', currentTheme());
+  if (glLayer && baseStyle) glLayer.getMaplibreMap().setStyle(cyberStyle(baseStyle, currentTheme()));   // repinta o mapa
+};
 $('bMute').onclick = () => { S.muted = !S.muted; $('bMute').textContent = S.muted ? '🔇' : '🔊'; };
 $('bGo').onclick = () => { S.navigating = true; $('bGo').classList.add('hidden'); setFollow(true); speak('Rota iniciada. ' + instr(S.route.steps[0])); updateNavigation(); };
 $('bCancel').onclick = cancelRoute;
-{ const th = load('nc_theme', null); if (th) document.body.className = th; }
+{ const th = load('nc_theme', null); if (th && PALETTE[th]) { document.body.classList.remove('theme-arasaka', 'theme-netrunner'); document.body.classList.add(th); } }

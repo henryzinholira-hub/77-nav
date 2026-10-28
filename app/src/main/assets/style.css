@@ -20,8 +20,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:#e8e8f0;font-family:Ra
 /* ── Filtros de cor nos "tiles" do mapa = o que dá o clima neon ──
    O mapa base é cinza-escuro; sepia() + saturate() + hue-rotate()
    "pintam" as ruas. Tema Arasaka = vermelho/laranja; Netrunner = ciano. */
-.theme-arasaka .leaflet-tile-pane{filter:sepia(1) saturate(5) hue-rotate(-28deg) brightness(.85) contrast(1.25)}
-.theme-netrunner .leaflet-tile-pane{filter:sepia(1) saturate(4) hue-rotate(140deg) brightness(.9) contrast(1.3)}
+/* Reserva (só se o mapa vetorial falhar): mapa claro do OSM invertido e tingido */
+.raster.theme-arasaka .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(1.2) sepia(1) saturate(5) hue-rotate(-28deg)}
+.raster.theme-netrunner .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(1.2) sepia(1) saturate(4) hue-rotate(140deg)}
 .theme-netrunner{--accent:var(--cyan);--line:rgba(0,240,255,.55)}
 .leaflet-container{background:#05050a;font-family:Rajdhani,sans-serif}
 .leaflet-control-attribution{background:rgba(0,0,0,.6)!important;color:#777!important;font-size:9px}
