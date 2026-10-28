@@ -11,6 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Achar a pasta do projeto
+        id: proj
+        run: |
+          F=$(find . -name settings.gradle.kts -not -path './.git/*' | head -1)
+          if [ -z "$F" ]; then
+            echo "::error::Nao achei settings.gradle.kts. Arquivos que estao no repositorio:"
+            find . -maxdepth 4 -not -path './.git*' | sort
+            exit 1
+          fi
+          D=$(dirname "$F")
+          echo "Projeto encontrado em: $D"
+          ls -la "$D"
+          echo "dir=$D" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -21,9 +35,10 @@ jobs:
           gradle-version: "8.9"
 
       - name: Compilar APK
+        working-directory: ${{ steps.proj.outputs.dir }}
         run: gradle assembleDebug --no-daemon --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
           name: NightCityNav-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/app/build/outputs/apk/debug/*.apk"
