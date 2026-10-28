@@ -17,16 +17,11 @@
 html,body{margin:0;height:100%;background:var(--bg);color:#e8e8f0;font-family:Rajdhani,sans-serif;overflow:hidden;user-select:none}
 #map{position:fixed;inset:0;background:#05050a}
 
-/* ── Filtros de cor nos "tiles" do mapa = o que dá o clima neon ──
-   O mapa base é cinza-escuro; sepia() + saturate() + hue-rotate()
-   "pintam" as ruas. Tema Arasaka = vermelho/laranja; Netrunner = ciano. */
-/* Reserva (só se o mapa vetorial falhar): mapa claro do OSM invertido e tingido */
-.raster.theme-arasaka .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(1.2) sepia(1) saturate(5) hue-rotate(-28deg)}
-.raster.theme-netrunner .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(1.2) sepia(1) saturate(4) hue-rotate(140deg)}
 .theme-netrunner{--accent:var(--cyan);--line:rgba(0,240,255,.55)}
-.leaflet-container{background:#05050a;font-family:Rajdhani,sans-serif}
-.leaflet-control-attribution{background:rgba(0,0,0,.6)!important;color:#777!important;font-size:9px}
-.leaflet-control-attribution a{color:#999!important}
+.maplibregl-ctrl-bottom-right{bottom:calc(64px + env(safe-area-inset-bottom))!important}
+.maplibregl-ctrl-attrib{background:rgba(0,0,0,.6)!important;color:#888!important;font-size:9px}
+.maplibregl-ctrl-attrib a{color:#aaa!important}
+.maplibregl-ctrl-attrib-button{filter:invert(1)}
 
 /* linhas de varredura de monitor CRT */
 .scanlines{pointer-events:none;position:fixed;inset:0;z-index:500;
@@ -43,6 +38,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:#e8e8f0;font-family:Ra
 .cp-btn.red{background:var(--red);color:#fff}
 .cp-btn.big{font-size:18px;padding:16px 34px;margin-top:18px}
 .cp-btn.sq{width:48px;height:48px;padding:0;font-size:20px;background:var(--panel);color:var(--accent);border:1px solid var(--line)}
+.cp-btn.sq.txt{font-family:Orbitron;font-size:13px}
 .cp-btn.sq.active{background:var(--accent);color:var(--bg)}
 .hidden{display:none!important}
 .tag{font-family:Orbitron;font-size:9px;font-weight:700;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);background:rgba(0,0,0,.6)}
@@ -116,7 +112,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:#e8e8f0;font-family:Ra
 /* ── barra inferior ── */
 #tripBar{position:fixed;z-index:890;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:6px;padding:8px 10px}
 .tb-cell{flex:1;text-align:center}
-.tb-cell b{display:block;font-family:Orbitron;font-weight:900;font-size:19px;color:var(--accent)}
+.tb-cell b{display:block;font-family:Orbitron;font-weight:900;font-size:17px;color:var(--accent)}
 .tb-cell small{font-family:Orbitron;font-size:8px;color:#aaa;letter-spacing:1px}
 
 /* ── menu de reporte ── */
@@ -130,17 +126,19 @@ html,body{margin:0;height:100%;background:var(--bg);color:#e8e8f0;font-family:Ra
   border:1px solid var(--cyan);color:var(--cyan);font-family:Orbitron;font-size:11px;padding:8px 14px;max-width:90vw;text-align:center}
 
 /* ── marcadores no mapa ── */
-.player{width:44px;height:44px}
-.player svg{width:44px;height:44px;transition:transform .5s;filter:drop-shadow(0 0 6px var(--cyan))}
+.player{width:48px;height:48px}
+.player svg{width:48px;height:48px;filter:drop-shadow(0 0 8px #39ff88)}
 .mk{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;
   background:rgba(5,5,10,.9);border:2px solid;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
 .mk.radar{border-color:var(--red);color:var(--red);font-family:Orbitron;font-size:10px}
 .mk.radar.user{color:var(--magenta)}
+.mk.radar.pref{background:#2a0008;color:#fff;border-color:var(--red);box-shadow:0 0 10px var(--red)}
 .mk.police{border-color:#3b8cff;color:#3b8cff}
 .mk.accident{border-color:#ff8a00;color:#ff8a00}
 .mk.hazard{border-color:var(--yellow);color:var(--yellow)}
 .mk.dest{border-color:var(--cyan);color:var(--cyan);font-size:18px}
-.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:#eee;border:1px solid var(--line);border-radius:0}
-.leaflet-popup-content{font-family:Rajdhani;font-size:15px;margin:10px 12px}
-.leaflet-popup-content b{color:var(--accent);font-family:Orbitron;font-size:12px}
-.leaflet-popup-content .cp-btn{margin-top:8px;font-size:10px;padding:6px 10px}
+.maplibregl-popup-content{background:var(--panel);color:#eee;border:1px solid var(--line);border-radius:0;font-family:Rajdhani;font-size:15px;padding:10px 12px}
+.maplibregl-popup-tip{border-top-color:var(--line)!important;border-bottom-color:var(--line)!important}
+.maplibregl-popup-content b{color:var(--accent);font-family:Orbitron;font-size:12px}
+.maplibregl-popup-content small{color:#aaa}
+.maplibregl-popup-content .cp-btn{margin-top:8px;font-size:10px;padding:6px 10px}

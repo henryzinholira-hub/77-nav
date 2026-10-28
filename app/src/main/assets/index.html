@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>NightCity Nav</title>
-<link rel="stylesheet" href="lib/leaflet.css">
 <link rel="stylesheet" href="lib/maplibre-gl.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -70,6 +69,7 @@
 <!-- ═══════════ BOTÕES LATERAIS ═══════════ -->
 <div id="fab">
   <button id="bFollow" class="cp-btn sq active" title="Seguir">◎</button>
+  <button id="b3d"     class="cp-btn sq txt" title="3D / 2D">3D</button>
   <button id="bRadar"  class="cp-btn sq" title="Atualizar radares">⟳</button>
   <button id="bTheme"  class="cp-btn sq" title="Tema">◐</button>
   <button id="bMute"   class="cp-btn sq" title="Voz">🔊</button>
@@ -77,8 +77,9 @@
 
 <!-- ═══════════ BARRA INFERIOR (rota) ═══════════ -->
 <div id="tripBar" class="cp-panel hidden">
-  <div class="tb-cell"><b id="tbEta">--</b><small>MIN</small></div>
+  <div class="tb-cell" id="tbEtaCell"><b id="tbEta">--</b><small>MIN ⓘ</small></div>
   <div class="tb-cell"><b id="tbDist">--</b><small>KM</small></div>
+  <div class="tb-cell"><b id="tbSig">--</b><small>SEMÁF.</small></div>
   <div class="tb-cell"><b id="tbArr">--:--</b><small>CHEGADA</small></div>
   <button id="bGo" class="cp-btn">INICIAR</button>
   <button id="bCancel" class="cp-btn red">✕</button>
@@ -101,9 +102,7 @@
 
 <div id="toast" class="hidden"></div>
 
-<script src="lib/leaflet.js"></script>
 <script src="lib/maplibre-gl.js"></script>
-<script src="lib/leaflet-maplibre-gl.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
