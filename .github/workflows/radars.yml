@@ -1,0 +1,32 @@
+# Calcula as posições dos radares de Hortolândia (OpenStreetMap + lista da prefeitura)
+# e salva em app/src/main/assets/radars.json. Roda sob demanda, quando o script muda e toda segunda.
+name: Atualizar radares
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ['scripts/build-radars.mjs']
+  schedule:
+    - cron: '17 9 * * 1'
+
+permissions:
+  contents: write
+
+jobs:
+  radars:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Calcular radares
+        run: node scripts/build-radars.mjs
+      - name: Salvar no repositório
+        run: |
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add app/src/main/assets/radars.json
+          git diff --cached --quiet && echo "sem mudanças" && exit 0
+          git commit -m "Atualiza radares.json ($(date -u +%F))"
+          git push
