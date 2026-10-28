@@ -35,32 +35,13 @@ if (!THEMES[cfg.theme]) cfg.theme = 'nightcity';
 const saveCfg = () => save('nc_cfg', cfg);
 const T = () => THEMES[cfg.theme];
 
-/* ═════════════ RADARES DA PREFEITURA (publicados em notícias) ═════════════
-   As notícias dão "Rua X com Rua Y" ou "perto de tal lugar", sem coordenadas. O app descobre:
-     • cross → ponto onde as duas ruas se cruzam no desenho do OSM
-     • near  → acha o lugar (Nominatim) e "gruda" no ponto mais próximo da rua
-     • só street → ponto exato desconhecido: avisa ao ENTRAR na via ("zona")
-   "." no lugar de letra acentuada → funciona com ou sem acento. */
-const SEED = [
-  { id: 'p1', label: 'Av. Olívio Franceschini × R. João Mendes', street: 'Ol.vio Franceschini', cross: 'Jo.o Mendes', limit: 60, src: 'Prefeitura, out/2025' },
-  { id: 'p2', label: 'R. Flamboyant × Av. Sabina B. de Camargo', street: 'Flamboyant', cross: 'Sabina', limit: 50, dir: 'Centro → bairro', src: 'Prefeitura, out/2025' },
-  { id: 'p3', label: 'Av. Sabina B. de Camargo × Estr. Prataviera', street: 'Sabina', cross: 'Prataviera', limit: 50, dir: 'bairro → Centro', src: 'Prefeitura, mar/2025' },
-  { id: 'p4', label: 'R. José Pereira de Lira (acesso P.I. Panaíno)', street: 'Pereira de Lira', cross: 'Pana.no', limit: 40, dir: 'bairro → Centro', src: 'Prefeitura, out/2025' },
-  { id: 'p5', label: 'Corredor Metropolitano (frente ao Paço)', street: 'Corredor|Bil.o Soares', near: 'Prefeitura Municipal de Hortolândia', limit: 50, dir: 'bairro → Centro', src: 'Prefeitura, out/2025' },
-  { id: 'p6', label: 'Av. da Emancipação (perto da Wickbold)', street: 'Emancipa..o', near: 'Wickbold', limit: 50, dir: 'Centro → bairro', src: 'Prefeitura, ago/2025' },
-  { id: 'p7', label: 'Av. da Emancipação (perto da Magneti Marelli)', street: 'Emancipa..o', near: 'Magneti Marelli', limit: 60, dir: 'bairro → Centro', src: 'Prefeitura, ago/2025' },
-  { id: 'p8', label: 'Av. da Emancipação (Hospital Mário Covas)', street: 'Emancipa..o', near: 'Hospital Municipal Mário Covas', limit: 50, src: 'lista de 2019' },
-  { id: 'p9', label: 'Estr. Carlos R. Prataviera (frente ao cemitério)', street: 'Prataviera', near: 'Cemitério Hortolândia', limit: 50, src: 'lista de 2019' },
-  { id: 'z1', label: 'R. Nelson Pereira Bueno', street: 'Nelson Pereira Bueno', limit: 50, src: 'lista de 2019' },
-  { id: 'z2', label: 'Av. Santana (Jd. Amanda)', street: '^Avenida Santana$', limit: 50, src: 'lista de 2019' },
-  { id: 'z3', label: 'Av. São Francisco de Assis', street: 'S.o Francisco de Assis', limit: 50, src: 'lista de 2019' },
-  { id: 'z4', label: 'Av. Thereza Ana Cecon Breda', street: 'Cecon Breda', limit: 50, src: 'lista de 2019' },
-  { id: 'z5', label: 'Av. Brasil (Jd. Amanda)', street: '^Avenida Brasil$', limit: 50, src: 'lista de 2019' },
-  { id: 'z6', label: 'R. Augusto dos Anjos', street: 'Augusto dos Anjos', limit: 50, src: 'lista de 2019' },
-  { id: 'z7', label: 'R. Luiz Camilo de Camargo', street: 'Lu.z Camilo de Camargo', limit: 50, src: 'lista de 2019' },
-  { id: 'z8', label: 'R. Otaviano de Figueiredo Breda', street: 'Otaviano de Figueiredo Breda', limit: 50, src: 'lista de 2019' },
-  { id: 'z9', label: 'Superviário', street: 'Supervi.rio', limit: 50, src: 'Prefeitura, jun/2026' },
-];
+/* ═════════════ RADARES ═════════════
+   As posições vêm PRONTAS no arquivo radars.json (embutido no app), calculado no GitHub pelo
+   scripts/build-radars.mjs: radares publicados pela prefeitura (posição achada pelo cruzamento
+   das ruas no OpenStreetMap) + câmeras cadastradas no OSM + semáforos.
+   Assim o mapa mostra os radares na hora, mesmo sem internet. Toda semana o GitHub recalcula,
+   e o app baixa a versão nova sozinho quando tiver internet. */
+const RADAR_URL = 'https://raw.githubusercontent.com/henryzinholira-hub/77-nav/main/app/src/main/assets/radars.json';
 
 /* ═════════════ GEOMETRIA (a matemática por trás) ═════════════ */
 const R = 6371000;                         // raio médio da Terra em metros
@@ -220,7 +201,9 @@ function followCamera() {
   if (cfg.mode3d) {
     o.pitch = 60; o.zoom = S.navigating ? cfg.navZoom : Math.max(map.getZoom(), 16);
     if (S.heading != null && S.speed > 4) o.bearing = S.heading;
-    o.offset = [0, map.getContainer().clientHeight * 0.2];
+    // tela larga: os painéis ficam à esquerda → desloca o carro para o centro da área livre do mapa
+    const wide = innerWidth > innerHeight || innerWidth >= 760;
+    o.offset = [wide ? Math.min(420, innerWidth * 0.46) / 2 : 0, map.getContainer().clientHeight * (wide ? 0.15 : 0.2)];
   } else { o.pitch = 0; o.bearing = 0; if (S.navigating) o.zoom = cfg.navZoom; }
   map.easeTo(o);
 }
@@ -244,7 +227,7 @@ function themeCards(container, big) {
     initAudio(); alertSound('ui');
     $('boot').classList.add('hidden');
     if (map) map.resize();
-    startLocation(); loadCityData(false);
+    startLocation();
   };
 })();
 
@@ -370,76 +353,33 @@ function checkSpeed() {
 async function overpass(q) {
   for (const url of CFG.overpass) {
     try {
-      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctl.signal });
+      clearTimeout(tm);
       if (r.ok) return (await r.json()).elements;
     } catch (e) { console.warn('overpass', url, e); }
   }
   throw new Error('overpass indisponível');
 }
-async function loadCityData(force) {
-  const cache = load('nc_city', null);
-  if (!force && cache && cache.v === 2 && Date.now() - cache.t < CFG.cityCacheDays * 864e5) { S.city = cache.data; renderCity(); return; }
-  toast('Mapeando radares e semáforos de Hortolândia...', 6000);
-  const [s, w, n, e] = CFG.bbox, bb = `${s},${w},${n},${e}`;
-  const pats = [...new Set(SEED.flatMap(x => [x.street, x.cross].filter(Boolean)))];
-  const q = `[out:json][timeout:90];
-    area["name"="Hortolândia"]["admin_level"="8"]->.h;
-    way(area.h)["highway"]["name"~"${pats.map(p => `(${p})`).join('|')}",i];
-    out body geom;
-    node(area.h)["highway"="traffic_signals"]; out body;
-    (node["highway"="speed_camera"](${bb}); node["enforcement"="maxspeed"](${bb}); relation["type"="enforcement"](${bb}););
-    out body; >; out skel qt;`;
-  let els;
-  try { els = await overpass(q); }
-  catch { if (cache) { S.city = cache.data; renderCity(); } toast('Sem conexão com o OpenStreetMap — tente de novo pelo menu'); return; }
-  const ways = els.filter(x => x.type === 'way' && x.geometry && x.tags?.name).map(x => ({ name: x.tags.name, nodes: x.nodes, geom: x.geometry.map(g => [g.lat, g.lon]) }));
-  const signals = els.filter(x => x.type === 'node' && x.tags?.highway === 'traffic_signals').map(x => [x.lat, x.lon]);
-  const radars = parseCameras(els), zones = [], missing = [];
-  const waysOf = pat => { const re = new RegExp(pat, 'i'); return ways.filter(w => re.test(w.name)); };
-  for (const sd of SEED) {
-    const A = waysOf(sd.street);
-    if (!A.length) { missing.push(sd.label); continue; }
-    let pt = null, how = '';
-    if (sd.cross) { pt = intersect(A, waysOf(sd.cross)); how = 'cruzamento'; }
-    else if (sd.near) {
-      try {
-        const url = `${CFG.nominatim}?format=jsonv2&limit=1&countrycodes=br&viewbox=${w},${n},${e},${s}&bounded=1&q=${encodeURIComponent(sd.near + ', Hortolândia')}`;
-        const res = await (await fetch(url)).json();
-        await sleep(1100);                                    // regra do Nominatim: no máx. 1 busca por segundo
-        if (res[0]) { const nb = nearestOnLines([+res[0].lat, +res[0].lon], A.map(a => a.geom)); if (nb.d < 700) { pt = nb.pt; how = 'perto de ' + sd.near; } }
-      } catch {}
-    }
-    if (pt) radars.push({ id: sd.id, lat: pt[0], lon: pt[1], limit: sd.limit, label: sd.label, dir: sd.dir, src: sd.src, how, origin: 'pref' });
-    else zones.push({ id: sd.id, label: sd.label, limit: sd.limit, src: sd.src, lines: A.map(a => a.geom) });
-  }
-  S.city = { radars, zones, signals, missing };
-  save('nc_city', { v: 2, t: Date.now(), data: S.city });
-  renderCity();
-  toast(`${radars.length} radares · ${zones.length} vias com radar · ${signals.length} semáforos`, 4500);
-  if (S.route) markRouteSignals();
+function setCity(j) {
+  S.city = { radars: j.radars || [], zones: j.zones || [], signals: j.signals || [], missing: j.missing || [], generated: j.generated || '' };
+  renderCity(); if (S.route) markRouteSignals();
 }
-/* Cruzamento: ruas que se cruzam no OSM compartilham um "nó" (mesmo id).
-   Se não (viaduto/passagem inferior), usa o par de pontos mais próximo (< 80 m). */
-function intersect(A, B) {
-  if (!B.length) return null;
-  for (const a of A) { const ids = new Map(a.nodes.map((id, i) => [id, a.geom[i]])); for (const b of B) for (const id of b.nodes) if (ids.has(id)) return ids.get(id); }
-  let best = { d: Infinity, pt: null };
-  for (const a of A) for (const p of a.geom) { const nb = nearestOnLines(p, B.map(b => b.geom)); if (nb.d < best.d) best = { d: nb.d, pt: p }; }
-  return best.d < 80 ? best.pt : null;
+function fetchJson(url, ms) {      // fetch com tempo máximo (servidor lento não trava o app)
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, { signal: ctl.signal, cache: 'no-store' }).then(r => { clearTimeout(t); if (!r.ok) throw new Error(r.status); return r.json(); });
 }
-function parseCameras(els) {
-  const nodes = {}, out = new Map();
-  for (const e of els) if (e.type === 'node') nodes[e.id] = e;
-  const lim = t => { const m = String(t?.maxspeed || '').match(/\d+/); return m ? +m[0] : null; };
-  const mk = (n, l, dir) => ({ id: 'osm' + n.id, lat: n.lat, lon: n.lon, limit: l, osmDir: dir, label: 'Câmera cadastrada no OSM', src: 'OpenStreetMap', origin: 'osm' });
-  for (const e of els) {
-    if (e.type === 'node' && (e.tags?.highway === 'speed_camera' || e.tags?.enforcement)) out.set(e.id, mk(e, lim(e.tags), e.tags.direction ?? null));
-    if (e.type === 'relation' && e.members) {
-      const dev = e.members.find(m => m.role === 'device' && m.type === 'node') || e.members.find(m => m.type === 'node');
-      const nd = dev && nodes[dev.ref]; if (nd) out.set(nd.id, mk(nd, lim(e.tags) ?? out.get(nd.id)?.limit ?? null, null));
-    }
+async function loadCityData(manual) {
+  if (!S.city.generated) {
+    try { setCity(await fetchJson('radars.json', 5000)); } catch (e) { console.warn('radars.json embutido', e); }
+    const c = load('nc_city3', null);
+    if (c && c.generated > S.city.generated) setCity(c);
   }
-  return [...out.values()];
+  try {
+    const j = await fetchJson(RADAR_URL + '?t=' + Date.now(), 12000);
+    if (j.generated && j.generated > S.city.generated) { setCity(j); save('nc_city3', j); if (manual) toast('Radares atualizados'); }
+    else if (manual) toast('Radares já estão atualizados');
+  } catch { if (manual) toast('Sem internet — usando os radares salvos no app'); }
 }
 const posOf = r => S.overrides[r.id] || [r.lat, r.lon];
 function mkEl(cls, html) { const d = document.createElement('div'); d.innerHTML = `<div class="mk ${cls}">${html}</div>`; return d.firstChild; }
@@ -451,7 +391,8 @@ function addMarker(p, el, html) {
 }
 function renderCity() {
   const c = S.city, userR = S.reports.filter(x => x.type === 'radar').length;
-  $('radarCount').textContent = `◉ ${c.radars.length + c.zones.length + userR}`;
+  const total = c.radars.length + c.zones.length + userR;
+  $('radarCount').textContent = `◉ ${total}`; $('radarBadge').textContent = total;
   if (!mapReady) return;
   markers.radar.forEach(m => m.remove()); markers.radar = [];
   for (const r of c.radars) {
@@ -774,9 +715,63 @@ function buildSheet() {
   about.innerHTML = 'Mapa © OpenFreeMap · © OpenMapTiles · © colaboradores do OpenStreetMap. Rotas: OSRM. Busca: Nominatim.<br>Radares da prefeitura vêm de notícias públicas e podem estar desatualizados — dirija sempre respeitando a sinalização.';
   body.appendChild(about);
 }
-function openSheet() { initAudio(); buildSheet(); $('sheetBack').classList.remove('hidden'); requestAnimationFrame(() => $('sheet').classList.add('open')); }
+function openSheet(kind = 'cfg') {
+  initAudio(); $('sheetTitle').textContent = kind === 'radars' ? 'Radares' : 'Configurações';
+  kind === 'radars' ? buildRadarList() : buildSheet();
+  $('sheetBack').classList.remove('hidden'); requestAnimationFrame(() => $('sheet').classList.add('open'));
+}
+
+/* ═════════════ CAÇADOR DE RADARES ═════════════
+   "Ver todos": afasta a câmera até caberem todos os radares na tela.
+   Lista: ordenada pela distância até você; tocar leva a câmera até o radar. */
+function allRadarPoints() {
+  const pts = S.city.radars.map(r => ({ kind: 'radar', r, p: posOf(r) }));
+  for (const z of S.city.zones) { const mid = z.lines[0][Math.floor(z.lines[0].length / 2)]; pts.push({ kind: 'zone', r: z, p: mid }); }
+  for (const r of S.reports.filter(x => x.type === 'radar')) pts.push({ kind: 'user', r, p: [r.lat, r.lon] });
+  return pts;
+}
+function showAllRadars() {
+  const pts = allRadarPoints(); if (!pts.length || !mapReady) return toast('Nenhum radar carregado ainda');
+  const b = new maplibregl.LngLatBounds();
+  pts.forEach(x => b.extend(ll(x.p))); S.city.zones.forEach(z => z.lines.forEach(l => l.forEach(p => b.extend(ll(p)))));
+  if (S.pos) b.extend(ll(S.pos));
+  setFollow(false);
+  const land = innerWidth > innerHeight;
+  map.fitBounds(b, { padding: land ? { top: 60, bottom: 40, left: 400, right: 90 } : { top: 170, bottom: 120, left: 40, right: 80 }, pitch: 0, bearing: 0, maxZoom: 16, duration: 1000 });
+}
+function goToRadar(x) {
+  closeSheet(); setFollow(false);
+  if (x.kind === 'zone') {
+    const b = new maplibregl.LngLatBounds(); x.r.lines.forEach(l => l.forEach(p => b.extend(ll(p))));
+    map.fitBounds(b, { padding: 80, pitch: 0, bearing: 0, maxZoom: 17, duration: 1000 });
+  } else {
+    map.flyTo({ center: ll(x.p), zoom: 17.2, pitch: cfg.mode3d ? 50 : 0, duration: 1200 });
+    const i = S.city.radars.indexOf(x.r);
+    if (i >= 0) setTimeout(() => { const m = markers.radar[i]; if (m && !m.getPopup().isOpen()) m.togglePopup(); }, 1300);
+  }
+}
+function buildRadarList() {
+  const body = $('sheetBody'); body.innerHTML = '';
+  const pts = allRadarPoints(), ref = S.pos || CFG.center;
+  pts.forEach(x => x.d = haversine(ref, x.p)); pts.sort((a, b) => a.d - b.d);
+  const top = document.createElement('div'); top.className = 'sec';
+  top.innerHTML = `<div class="about" style="margin-top:0">${S.city.radars.length} radares com ponto exato · ${S.city.zones.length} vias com radar (ponto exato desconhecido, tracejadas no mapa)` +
+    (S.city.generated ? ` · atualizado em ${new Date(S.city.generated).toLocaleDateString('pt-BR')}` : '') + `</div>`;
+  const all = document.createElement('button'); all.className = 'btn wide'; all.textContent = 'Ver todos no mapa';
+  all.onclick = () => { closeSheet(); showAllRadars(); }; top.appendChild(all); body.appendChild(top);
+  const sec = document.createElement('div'); sec.className = 'sec'; body.appendChild(sec);
+  if (!pts.length) sec.innerHTML = '<div class="about">Nenhum radar carregado. Toque em "Atualizar radares" nas configurações.</div>';
+  for (const x of pts) {
+    const r = x.r, row = document.createElement('button'); row.className = 'rlist';
+    const tag = x.kind === 'zone' ? 'via' : x.kind === 'user' ? 'seu' : (r.origin === 'osm' ? 'OSM' : 'prefeitura');
+    row.innerHTML = `<span class="rl-badge ${x.kind}">${r.limit ?? '?'}</span><span class="rl-txt">${r.label || 'Radar marcado por você'}<small>${tag}${r.dir ? ' · ' + r.dir : ''}</small></span><span class="rl-d">${x.d >= 1000 ? (x.d / 1000).toFixed(1) + ' km' : Math.round(x.d) + ' m'}</span>`;
+    row.onclick = () => goToRadar(x); sec.appendChild(row);
+  }
+}
 function closeSheet() { $('sheet').classList.remove('open'); $('sheetBack').classList.add('hidden'); }
-$('bMenu').onclick = openSheet;
+$('bMenu').onclick = () => openSheet('cfg');
+$('bRadars').onclick = () => openSheet('radars');
+$('radarCount').onclick = showAllRadars;
 $('sheetClose').onclick = closeSheet;
 $('sheetBack').onclick = closeSheet;
 
@@ -790,6 +785,7 @@ $('bGo').onclick = () => {
   $('bGo').classList.add('hidden'); setFollow(true); alertSound('ui'); speak('Rota iniciada. ' + instr(S.route.steps[0])); updateNavigation();
 };
 $('bCancel').onclick = cancelRoute;
+loadCityData(false);
 $('b3d').textContent = cfg.mode3d ? '3D' : '2D';
 $('muteIcon').setAttribute('href', cfg.muted ? '#i-mute' : '#i-vol');
 initMap();

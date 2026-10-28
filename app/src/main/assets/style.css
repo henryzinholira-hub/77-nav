@@ -234,3 +234,65 @@ body[data-theme=western] .sec h3{color:#8b1a1a;font-size:15px;letter-spacing:.5p
 .maplibregl-ctrl-bottom-right{bottom:calc(64px + env(safe-area-inset-bottom))!important}
 .maplibregl-ctrl-attrib{background:rgba(0,0,0,.55)!important;color:#bbb!important;font-size:9px}
 .maplibregl-ctrl-attrib a{color:#ddd!important}
+
+/* ── contador no botão de radares e lista de radares ── */
+.fab{position:relative}
+.badge{position:absolute;bottom:3px;right:3px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;
+  font-family:var(--f-num);font-size:10px;line-height:18px;text-align:center;font-weight:900}
+button.chip{cursor:pointer}
+.rlist{display:flex;align-items:center;gap:12px;width:100%;padding:11px 2px;background:none;border:0;border-bottom:1px solid rgba(127,127,127,.16);text-align:left;cursor:pointer;color:var(--text)}
+.rl-badge{flex:none;width:38px;height:38px;border-radius:50%;background:#fff;border:4px solid #d50000;color:#000;font-family:Orbitron,sans-serif;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+.rl-badge.zone{border-style:dashed}
+.rl-badge.user{border-color:var(--alt)}
+.rl-txt{flex:1;min-width:0;font-size:15px}
+.rl-txt small{display:block;color:var(--muted);font-size:12px;font-weight:500}
+.rl-d{flex:none;font-family:var(--f-num);font-size:13px;color:var(--accent)}
+
+/* ════════ HORIZONTAL E TABLET ════════
+   Tela larga: tudo que é informação vai para uma coluna à esquerda (360–420 px)
+   e o mapa fica livre à direita; botões numa coluna à direita. */
+@media (orientation: landscape), (min-width: 760px) {
+  #top{right:auto;width:min(420px,46vw)}
+  #maneuver{right:auto;width:min(420px,46vw)}
+  #tripBar{right:auto;width:min(420px,46vw)}
+  #radarAlert{left:auto;right:84px;transform:none;top:calc(12px + env(safe-area-inset-top))}
+  #sheet{left:auto;top:0;width:min(440px,92vw);max-height:none;border-radius:calc(var(--radius) + 6px) 0 0 calc(var(--radius) + 6px);transform:translateX(105%)}
+  #sheet.open{transform:none}
+  .sheet-grip{display:none}
+  #toast{left:calc(min(420px,46vw) + 20px);transform:none;bottom:20px;max-width:calc(100vw - min(420px,46vw) - 110px)}
+}
+/* celular deitado: pouca altura → componentes compactos e velocímetro ao lado dos botões */
+@media (orientation: landscape) and (max-height: 560px) {
+  #top{top:calc(6px + env(safe-area-inset-top))}
+  .topbar{margin-bottom:5px}
+  #q{padding:6px 0;font-size:15px}
+  #results{max-height:55vh}
+  #maneuver{top:calc(86px + env(safe-area-inset-top));padding:6px 12px}
+  #mArrow{font-size:36px;width:44px}
+  #mDist{font-size:20px}
+  #mInstr{font-size:15px}
+  #fab{bottom:calc(8px + env(safe-area-inset-bottom));gap:6px}
+  .fab{width:44px;height:44px}
+  .fab .ic{width:20px;height:20px}
+  #speedo{left:auto;right:66px;bottom:calc(8px + env(safe-area-inset-bottom));width:92px;height:92px}
+  #spVal{font-size:28px}
+  #roadName{left:auto;right:66px;bottom:calc(112px + env(safe-area-inset-bottom));max-width:40vw}
+  #tripBar{bottom:calc(8px + env(safe-area-inset-bottom));padding:5px 6px 5px 2px}
+  .tb-cell b{font-size:16px}
+  .maplibregl-ctrl-bottom-right{bottom:4px!important;right:170px!important}
+  #reportMenu{top:50%;max-height:94vh;overflow:auto}
+  #bootlog{display:none}
+  .boot-themes{margin:12px 0 0}
+  .brand{font-size:26px}
+  body[data-theme=western] .brand,body[data-theme=royale] .brand{font-size:32px}
+  .btn.big{margin-top:12px;padding:12px 30px}
+}
+/* tablet: um pouco maior */
+@media (min-width: 900px) and (min-height: 600px) {
+  .fab{width:58px;height:58px}
+  #speedo{width:132px;height:132px}
+  #roadName{bottom:calc(236px + env(safe-area-inset-bottom))}
+  #spVal{font-size:40px}
+  #mDist{font-size:30px}
+  #mInstr{font-size:20px}
+}

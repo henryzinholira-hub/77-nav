@@ -47,7 +47,7 @@
     <span id="brandSmall" class="brand small" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</span>
     <span class="spacer"></span>
     <span id="gpsStatus" class="chip">GPS ---</span>
-    <span id="radarCount" class="chip alt">◉ --</span>
+    <button id="radarCount" class="chip alt">◉ --</button>
   </div>
   <div class="search panel">
     <svg class="ic"><use href="#i-search"/></svg>
@@ -81,6 +81,7 @@
 <div id="fab">
   <button id="bFollow" class="fab active" aria-label="Seguir"><svg class="ic"><use href="#i-target"/></svg></button>
   <button id="b3d" class="fab txt" aria-label="3D ou 2D">3D</button>
+  <button id="bRadars" class="fab" aria-label="Ver todos os radares"><svg class="ic"><use href="#i-cam"/></svg><b id="radarBadge" class="badge">0</b></button>
   <button id="bMute" class="fab" aria-label="Som"><svg class="ic"><use id="muteIcon" href="#i-vol"/></svg></button>
   <button id="bMenu" class="fab" aria-label="Configurações"><svg class="ic"><use href="#i-gear"/></svg></button>
 </div>
@@ -115,7 +116,7 @@
 <div id="sheetBack" class="hidden"></div>
 <div id="sheet" class="panel">
   <div class="sheet-grip"></div>
-  <div class="sheet-head"><span>Configurações</span><button id="sheetClose" class="icon-btn" aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button></div>
+  <div class="sheet-head"><span id="sheetTitle">Configurações</span><button id="sheetClose" class="icon-btn" aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button></div>
   <div id="sheetBody"></div>
 </div>
 
