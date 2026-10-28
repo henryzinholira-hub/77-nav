@@ -24,10 +24,10 @@ const ST = {
   joaomendes:{ q: ['Rua João Mendes'], m: 'Jo~o Mendes' },
   flamboyant:{ q: ['Rua Flamboyant'], m: 'Flamboyant' },
   sabina:    { q: ['Avenida Sabina Baptista de Camargo', 'Estrada Municipal Sabina Batista de Camargo', 'Sabina Batista de Camargo'], m: 'Sabina' },
-  prataviera:{ q: ['Estrada Municipal Carlos Roberto Prataviera', 'Carlos Roberto Prataviera'], m: 'Prataviera' },
+  prataviera:{ q: ['Estrada Municipal Carlos Roberto Prataviera', 'Carlos Roberto Prataviera', 'Prataviera', 'Pratavieira'], m: 'Prat\\p{L}vi\\p{L}?e?i?ra|Prataviera' },
   lira:      { q: ['Rua José Pereira de Lira'], m: 'Pereira de Lira' },
-  panaino:   { q: ['Avenida Panaíno', 'Panaino'], m: 'Pana~no' },
-  corredor:  { q: ['Corredor Metropolitano Biléo Soares', 'Corredor Metropolitano'], m: 'Corredor|Bil~o Soares' },
+  panaino:   { q: ['Avenida Panaíno', 'Rua Panaíno', 'Panaino'], m: 'Pana~no' },
+  corredor:  { q: ['Corredor Metropolitano Biléo Soares', 'Corredor Metropolitano', 'Biléo Soares'], m: 'Corredor|Bil~o Soares' },
   emancip:   { q: ['Avenida da Emancipação'], m: 'Emancipa~~o' },
   nelson:    { q: ['Rua Nelson Pereira Bueno'], m: 'Nelson Pereira Bueno' },
   santana:   { q: ['Avenida Santana'], m: '^(Avenida|Av\\.?) Santana$' },
@@ -36,8 +36,8 @@ const ST = {
   brasil:    { q: ['Avenida Brasil'], m: '^(Avenida|Av\\.?) Brasil$' },
   anjos:     { q: ['Rua Augusto dos Anjos'], m: 'Augusto dos Anjos' },
   camilo:    { q: ['Rua Luiz Camilo de Camargo', 'Rua Luís Camilo de Camargo'], m: 'Lu~z Camilo de Camargo' },
-  otaviano:  { q: ['Rua Otaviano de Figueiredo Breda'], m: 'Otaviano de Figueiredo Breda' },
-  superv:    { q: ['Superviário', 'Avenida Superviário'], m: 'Supervi~rio' },
+  otaviano:  { q: ['Rua Otaviano de Figueiredo Breda', 'Otaviano Breda', 'Otaviano de Figueiredo'], m: 'Otaviano' },
+  superv:    { q: ['Superviário', 'Avenida Superviário', 'Superviario'], m: 'Supervi~rio' },
 };
 const SEED = [
   { id: 'p1', label: 'Av. Olívio Franceschini × R. João Mendes', street: 'olivio', cross: 'joaomendes', limit: 60, src: 'Prefeitura, out/2025' },
@@ -103,7 +103,7 @@ async function streetLines(key) {
   if (geomCache[key]) return geomCache[key];
   const st = ST[key], lines = [], names = new Set();
   for (const q of st.q) {
-    const res = await nomi(`${q}, Hortolândia`, '&polygon_geojson=1&limit=20');
+    const res = await nomi(`${q}, Hortolândia`, '&polygon_geojson=1&limit=40&dedupe=0');
     for (const it of res) {
       const nm = it.name || it.display_name.split(',')[0];
       if (it.category !== 'highway' && it.class !== 'highway') continue;
@@ -113,7 +113,6 @@ async function streetLines(key) {
       for (const c of parts) lines.push(c.map(([lon, lat]) => [lat, lon]));
       names.add(nm);
     }
-    if (lines.length) break;
   }
   console.log(`[rua] ${key}: ${lines.length} trechos (${[...names].join(' / ') || 'nada'})`);
   return (geomCache[key] = { lines, names: [...names] });
@@ -128,6 +127,23 @@ function save() {
 // ═════ ETAPA 1: radares da prefeitura ═════
 for (const sd of SEED) {
   const A = await streetLines(sd.street);
+  if (!A.lines.length && sd.near) {
+    // rua não achada pelo nome: acha o lugar de referência e pega a VIA MAIS PRÓXIMA dele (busca reversa)
+    let done = false;
+    for (const q of sd.near) {
+      const r = await nomi(q, '&limit=1'); if (!r[0]) continue;
+      const [s_, w_, n_, e_] = BBOX;
+      let rev = null;
+      try { const rr = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&layer=address&polygon_geojson=1&lat=${r[0].lat}&lon=${r[0].lon}`, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(25000) }); await sleep(1200); rev = rr.ok ? await rr.json() : null; } catch {}
+      const g = rev?.geojson, ref = [+r[0].lat, +r[0].lon];
+      const lines = g?.type === 'LineString' ? [g.coordinates.map(([a, b]) => [b, a])] : g?.type === 'MultiLineString' ? g.coordinates.map(c => c.map(([a, b]) => [b, a])) : [];
+      const nb = lines.length ? nearest(ref, lines) : { pt: ref, d: 0 };
+      radars.push({ id: sd.id, lat: r6(nb.pt[0]), lon: r6(nb.pt[1]), limit: sd.limit, label: sd.label, dir: sd.dir || null, src: sd.src, how: `aproximado: ${rev?.name || 'via'} em frente a ${r[0].name || q}`, origin: 'pref', approx: true });
+      log(`≈ ${sd.id} ${sd.label} → ${r6(nb.pt[0])},${r6(nb.pt[1])} (via mais próxima de ${r[0].display_name}: ${rev?.name || '?'})`);
+      done = true; break;
+    }
+    if (done) continue;
+  }
   if (!A.lines.length) { missing.push(sd.label); log(`✗ ${sd.id} ${sd.label}: rua não encontrada`); continue; }
   let res = null, how = '';
   if (sd.cross) {
@@ -140,7 +156,7 @@ for (const sd of SEED) {
       const r = await nomi(q, '&limit=1'); if (!r[0]) { console.log(`[ref] "${q}" não achado`); continue; }
       const p = [+r[0].lat, +r[0].lon], nb = nearest(p, A.lines);
       console.log(`[ref] "${q}" → ${r[0].display_name} (a ${Math.round(nb.d)} m da rua)`);
-      if (nb.d < 700) { res = nb; how = `em frente a ${r[0].name || q} (${Math.round(nb.d)} m)`; break; }
+      if (nb.d < 300) { res = nb; how = `em frente a ${r[0].name || q} (${Math.round(nb.d)} m)`; break; }
     }
   }
   if (res) { radars.push({ id: sd.id, lat: r6(res.pt[0]), lon: r6(res.pt[1]), limit: sd.limit, label: sd.label, dir: sd.dir || null, src: sd.src, how, origin: 'pref' }); log(`✓ ${sd.id} ${sd.label} → ${r6(res.pt[0])},${r6(res.pt[1])} (${how})`); }
@@ -154,10 +170,10 @@ log(`etapa 1 ok em ${Math.round((Date.now() - T0) / 1000)} s: ${radars.length} p
 
 // ═════ ETAPA 2 (opcional): semáforos e câmeras do OSM via Overpass ═════
 async function overpass(q, label) {
-  for (const url of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter']) {
+  for (const url of ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter']) {
     const t0 = Date.now();
     try {
-      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }, signal: AbortSignal.timeout(60000) });
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }, signal: AbortSignal.timeout(45000) });
       console.log(`[overpass] ${label} ${url}: HTTP ${r.status} em ${Date.now() - t0} ms`);
       if (r.ok) return (await r.json()).elements;
     } catch (e) { console.log(`[overpass] ${label} ${url}: ${e.message} após ${Date.now() - t0} ms`); }

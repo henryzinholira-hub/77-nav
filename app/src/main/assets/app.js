@@ -289,7 +289,7 @@ const CTB = { motorway: 110, trunk: 80, primary: 60, secondary: 60, tertiary: 40
 async function fetchRoads() {
   ROAD.busy = true; ROAD.lastQ = S.pos; ROAD.lastQT = Date.now();
   try {
-    const els = await overpass(`[out:json][timeout:15];way(around:250,${S.pos[0]},${S.pos[1]})["highway"~"${HW}"];out tags geom;`);
+    const els = await overpass(`[out:json][timeout:8];way(around:250,${S.pos[0]},${S.pos[1]})["highway"~"${HW}"];out tags geom;`, 8000);
     for (const w of els) if (w.type === 'way' && w.geometry) {
       const g = w.geometry.map(p => [p.lat, p.lon]);
       const lats = g.map(p => p[0]), lons = g.map(p => p[1]);
@@ -297,7 +297,18 @@ async function fetchRoads() {
         box: [Math.min(...lats) - 3e-4, Math.min(...lons) - 3e-4, Math.max(...lats) + 3e-4, Math.max(...lons) + 3e-4] });
     }
     if (ROAD.ways.size > 3000) [...ROAD.ways.keys()].slice(0, 1000).forEach(k => ROAD.ways.delete(k));   // limita a memória
-  } catch (e) { console.warn('roads', e); }
+    ROAD.rev = null;
+  } catch (e) {
+    // Plano B (servidor Overpass fora do ar): pergunta ao Nominatim "que rua é esta?" — devolve nome,
+    // tipo de via e, se cadastrado, o limite (extratags.maxspeed). Uma consulta a cada ~150 m.
+    try {
+      const j = await fetchJson(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&layer=address&extratags=1&lat=${S.pos[0]}&lon=${S.pos[1]}`, 8000);
+      if (j && j.category === 'highway') {
+        const tag = parseInt(String(j.extratags?.maxspeed || '').match(/\d+/)?.[0]);
+        ROAD.rev = { name: j.name || j.address?.road || '', limit: tag || CTB[j.type] || null, est: !tag, at: S.pos };
+      }
+    } catch (e2) { console.warn('roads', e, e2); }
+  }
   ROAD.busy = false;
 }
 function matchRoad() {
@@ -316,8 +327,9 @@ function updateRoad() {
   if (m && m.d < 25) {
     const tag = parseInt(String(m.maxspeed || '').match(/\d+/)?.[0]);
     S.road = { name: m.name, limit: tag || CTB[m.hw] || null, est: !tag };
-  } else S.road = null;
-  const needFetch = !m || m.d > 25 || !ROAD.lastQ || haversine(ROAD.lastQ, S.pos) > 180;
+  } else if (ROAD.rev && haversine(ROAD.rev.at, S.pos) < 200) S.road = ROAD.rev;
+  else S.road = null;
+  const needFetch = !m || m.d > 25 || !ROAD.lastQ || haversine(ROAD.lastQ, S.pos) > (ROAD.rev ? 150 : 180);
   if (needFetch && !ROAD.busy && Date.now() - ROAD.lastQT > 8000) fetchRoads().then(() => { updateRoad(); checkSpeed(); });
   const rn = $('roadName');
   rn.classList.toggle('hidden', !S.road?.name);
@@ -350,10 +362,10 @@ function checkSpeed() {
 }
 
 /* ═════════════ DADOS DA CIDADE ═════════════ */
-async function overpass(q) {
+async function overpass(q, ms = 15000) {
   for (const url of CFG.overpass) {
     try {
-      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms);
       const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctl.signal });
       clearTimeout(tm);
       if (r.ok) return (await r.json()).elements;

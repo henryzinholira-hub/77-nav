@@ -13,6 +13,8 @@
 @font-face{font-family:Luckiest;src:url(fonts/luckiest-guy-latin-400-normal.woff2) format("woff2")}
 @font-face{font-family:Nunito;src:url(fonts/nunito-latin-700-normal.woff2) format("woff2");font-weight:700}
 @font-face{font-family:Nunito;src:url(fonts/nunito-latin-900-normal.woff2) format("woff2");font-weight:900}
+@font-face{font-family:Oswald;src:url(fonts/oswald-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:Oswald;src:url(fonts/oswald-latin-700-normal.woff2) format("woff2");font-weight:700}
 
 /* ── NIGHT CITY (padrão) ── */
 body{
@@ -41,6 +43,16 @@ body[data-theme=royale]{
   --f-title:Luckiest,sans-serif; --f-body:Nunito,sans-serif; --f-num:Luckiest,sans-serif;
   --clip:none; --clip-btn:none; --radius:16px; --title-case:uppercase; --fx:0;
 }
+/* ── VIGILANTE: noite gótica, painéis grafite, linhas azul-gelo, destaque âmbar ── */
+body[data-theme=vigilante]{
+  --accent:#ffb000; --accent-ink:#0b0f16; --alt:#8fd0ff; --danger:#ff3b3b; --ok:#ffb000;
+  --text:#e6edf6; --muted:#8a9ab0; --bg:#0b0f16;
+  --panel:rgba(12,17,26,.93); --panel-line:rgba(143,208,255,.38); --panel-shadow:0 8px 26px rgba(0,0,0,.65);
+  --f-title:Oswald,sans-serif; --f-body:Rajdhani,sans-serif; --f-num:Oswald,sans-serif;
+  --clip:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+  --clip-btn:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+  --radius:0px; --title-case:uppercase; --fx:1;
+}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--f-body);font-weight:700;overflow:hidden;user-select:none}
@@ -53,6 +65,8 @@ button{font:inherit;color:inherit}
 .fx-overlay{pointer-events:none;position:fixed;inset:0;z-index:500}
 body[data-theme=nightcity] .fx-overlay,body[data-theme=netrunner] .fx-overlay{background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
 body[data-theme=western] .fx-overlay{background:radial-gradient(ellipse at center,transparent 55%,rgba(90,60,30,.35) 100%)}
+body[data-theme=vigilante] .fx-overlay{background:repeating-linear-gradient(105deg,transparent 0 22px,rgba(170,200,255,.07) 22px 23px,transparent 23px 47px);background-size:200px 200px;animation:rain .55s linear infinite}
+@keyframes rain{to{background-position:-60px 200px}}
 body[data-theme=royale] .fx-overlay{background:linear-gradient(180deg,rgba(0,40,140,.18),transparent 22%,transparent 80%,rgba(0,40,140,.18))}
 
 /* ── painéis e botões ── */
@@ -81,6 +95,11 @@ body[data-theme=nightcity] .brand::before,body[data-theme=netrunner] .brand::bef
 body[data-theme=nightcity] .brand::after,body[data-theme=netrunner] .brand::after{color:var(--danger);animation:gl2 3.1s infinite steps(1);clip-path:inset(55% 0 0 0)}
 @keyframes gl1{0%,92%{transform:none}93%{transform:translate(-3px,1px)}96%{transform:translate(2px,-1px)}}
 @keyframes gl2{0%,88%{transform:none}89%{transform:translate(3px,0)}94%{transform:translate(-2px,1px)}}
+body[data-theme=vigilante] .brand{color:#e6edf6;letter-spacing:8px;font-size:38px;border-bottom:3px solid var(--accent);display:inline-block;padding-bottom:4px}
+body[data-theme=vigilante] .brand.small{font-size:15px;letter-spacing:4px;border-bottom-width:2px;padding-bottom:1px}
+body[data-theme=vigilante] #boot{background:radial-gradient(ellipse at 50% 35%,#1d2a40,#06090f 72%)}
+body[data-theme=vigilante] #bootlog{color:#8fd0ff}
+body[data-theme=vigilante] .panel{border-left:3px solid var(--accent)}
 body[data-theme=western] .brand{color:#5a1a12;font-size:40px;letter-spacing:1px}
 body[data-theme=western] .brand.small{font-size:16px}
 body[data-theme=royale] .brand{color:#fff;-webkit-text-stroke:2px #1b1b3a;text-shadow:0 4px 0 #1b1b3a;font-size:42px}
@@ -99,7 +118,7 @@ body[data-theme=royale] .boot-sub{color:#fff}
 #bootlog{text-align:left;font-family:monospace;font-size:11px;color:#8f8;min-height:84px;margin:16px auto 0;width:270px;white-space:pre-wrap}
 body[data-theme=western] #bootlog{color:#4a3220;font-family:Fell,serif;font-size:14px}
 body[data-theme=royale] #bootlog{color:#fff;font-family:Nunito}
-.boot-themes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:22px 0 4px}
+.boot-themes{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:22px 0 4px}
 .tcard{background:none;border:2px solid transparent;padding:0;cursor:pointer;border-radius:10px;overflow:hidden;text-align:center}
 .tcard .sw{height:46px}
 .tcard span{display:block;font-size:11px;padding:4px 2px;font-family:var(--f-body);color:var(--text);background:rgba(0,0,0,.25)}

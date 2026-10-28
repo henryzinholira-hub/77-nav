@@ -10,6 +10,7 @@
 
 const THEMES = {
   nightcity: {
+    sky: { sky: '#05070f', horizon: '#ff2a4d', fog: '#0a1622' }, light: { color: '#ff9aa8', intensity: 0.45 },
     name: 'Night City', tag: 'Cyberpunk · neon vermelho e ciano',
     preview: 'linear-gradient(135deg,#3a0911 0 40%,#2fc6ff 40% 46%,#3a0911 46% 70%,#d4243d 70%)',
     boot: { title: 'NIGHTCITY//NAV', sub: 'SETOR: HORTOLÂNDIA · SP', btn: 'JACK IN',
@@ -23,6 +24,7 @@ const THEMES = {
     sound: { wave: 'square', notes: [1318, 1568, 2093], dur: 0.085, gap: 0.035, decay: 0.08 },
   },
   netrunner: {
+    sky: { sky: '#03050a', horizon: '#00b8d4', fog: '#05080e' }, light: { color: '#9ff6ff', intensity: 0.45 },
     name: 'Netrunner', tag: 'Cyberpunk · magenta e ciano',
     preview: 'linear-gradient(135deg,#0a1a24 0 40%,#ff2a6d 40% 46%,#0a1a24 46% 70%,#18c4d8 70%)',
     boot: { title: 'NETRUNNER//NAV', sub: 'CONEXÃO: HORTOLÂNDIA · SP', btn: 'CONECTAR',
@@ -36,19 +38,21 @@ const THEMES = {
     sound: { wave: 'sawtooth', notes: [988, 1319, 1976], dur: 0.08, gap: 0.03, decay: 0.07 },
   },
   western: {
+    sky: { sky: '#f4e4bf', horizon: '#e3c48a', fog: '#e9d8b0' }, light: { color: '#ffe2b0', intensity: 0.4 },
     name: 'Velho Oeste', tag: 'Mapa de papel antigo · tinta e sépia',
     preview: 'linear-gradient(135deg,#e6d3a8 0 40%,#4a3220 40% 43%,#dcc392 43% 70%,#9db3a6 70%)',
     boot: { title: 'Hortolândia', sub: 'Mapa do Território · Anno MMXXVI', btn: 'Selar o cavalo',
             log: ['~ desdobrando o mapa...', '~ conferindo a bússola...', '~ marcando as estradas...', '~ xerife avisa: cuidado com os radares', '~ pé na estrada, parceiro.'] },
     map: { bg: '#e9d8b0', land: '#dfc795', landHi: '#d4b57c', park: '#b8b68a', water: '#9db3a6',
            road: '#5a3a22', roadMid: '#6e4a2c', roadMinor: '#8a6a48', roadCase: '#efe2c0', glow: '#000000',
-           bldg: ['#c2a170', '#c2a170'], bldgLine: '#7a5a34', label: '#3b2a1a', roadLabel: '#4a3220', halo: '#efe2c0',
+           bldg: ['#c9a675', '#7e5a36'], bldgLine: '#7a5a34', label: '#3b2a1a', roadLabel: '#4a3220', halo: '#efe2c0',
            border: '#8b1a1a', rail: '#3b2a1a' },
-    glow: false, extrude: false, roadScale: 0.7, upcase: false, fonts: { r: ['Noto Sans Italic'], b: ['Noto Sans Bold'] },
+    glow: false, extrude: true, roadScale: 0.7, upcase: false, fonts: { r: ['Noto Sans Italic'], b: ['Noto Sans Bold'] },
     route: { core: '#9b1c1c', glow: '#9b1c1c', dash: [2, 1.4] }, player: '#8b1a1a', zone: '#8b1a1a', signal: '#3b2a1a',
     sound: { wave: 'sine', notes: [784, 1046, 1318], dur: 0.32, gap: 0.04, decay: 0.45, bell: true },
   },
   royale: {
+    sky: { sky: '#6cc6ff', horizon: '#e4f6ff', fog: '#c4e9ff' }, light: { color: '#ffffff', intensity: 0.3 },
     name: 'Battle Royale', tag: 'Cartoon colorido · cores vivas',
     preview: 'linear-gradient(135deg,#6cc24a 0 40%,#ffffff 40% 46%,#7cc95b 46% 70%,#2fa3f0 70%)',
     boot: { title: 'BATTLE NAV', sub: 'ZONA DE POUSO: HORTOLÂNDIA', btn: 'SALTAR!',
@@ -60,6 +64,20 @@ const THEMES = {
     glow: false, extrude: true, roadScale: 1.1, upcase: true, fonts: { r: ['Noto Sans Bold'], b: ['Noto Sans Bold'] },
     route: { core: '#ffe14d', glow: '#9d4dff', dash: null }, player: '#22c7ff', zone: '#9d4dff', signal: '#ffe14d',
     sound: { wave: 'triangle', notes: [1047, 1319, 1568, 2093], dur: 0.07, gap: 0.025, decay: 0.07 },
+  },
+  vigilante: {
+    sky: { sky: '#060910', horizon: '#3b4d6b', fog: '#0b1018' }, light: { color: '#a9c2ff', intensity: 0.55 },
+    name: 'Vigilante', tag: 'Cidade gótica à noite · azul e âmbar',
+    preview: 'linear-gradient(135deg,#141b26 0 40%,#ffb000 40% 44%,#1b2433 44% 70%,#4a5a70 70%)',
+    boot: { title: 'VIGILANTE', sub: 'PATRULHA NOTURNA · HORTOLÂNDIA', btn: 'INICIAR PATRULHA',
+            log: ['// conectando ao computador do carro...', '// varredura da cidade em andamento...', '// modelo 3D dos prédios carregado...', '// rede de radares sob vigilância', '// a noite é sua.'] },
+    map: { bg: '#090d14', land: '#121925', landHi: '#18212f', park: '#0d1716', water: '#04080f',
+           road: '#a9c0dc', roadMid: '#5c7192', roadMinor: '#344459', roadCase: '#05080d', glow: '#4f9dff',
+           bldg: ['#1a2231', '#56677f'], bldgLine: null, label: '#d3deec', roadLabel: '#8fa3bd', halo: '#05080d',
+           border: '#ffb000', rail: '#2a3446' },
+    glow: true, extrude: true, roadScale: 0.9, upcase: true, fonts: { r: ['Noto Sans Regular'], b: ['Noto Sans Bold'] },
+    route: { core: '#ffd25a', glow: '#ff8a00', dash: null }, player: '#ffb000', zone: '#ff3b3b', signal: '#ffb000',
+    sound: { wave: 'sawtooth', notes: [659, 880, 1175], dur: 0.09, gap: 0.04, decay: 0.12 },
   },
 };
 
@@ -91,8 +109,14 @@ function buildStyle(T, src, glyphs, opt) {
     L('rail', 'line', 'transportation', { filter: ['match', cls, ['rail', 'transit'], true, false],
       paint: { 'line-color': P.rail, 'line-width': 2, 'line-dasharray': [3, 2] } }),
   ];
-  if (T.glow) layers.push(L('road-glow', 'line', 'transportation', { filter: roads, layout: cap,
-      paint: { 'line-color': P.glow, 'line-width': W(2.4 * s), 'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 2, 18, 16], 'line-opacity': 0.3 } }));
+  if (T.glow) layers.push(
+    L('road-glow', 'line', 'transportation', { filter: roads, layout: cap,
+      paint: { 'line-color': P.glow, 'line-width': W(2.4 * s), 'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 2, 18, 16], 'line-opacity': 0.3 } }),
+    // brilho extra só nas vias principais → as avenidas "acendem" como no mapa do jogo
+    L('road-glow-major', 'line', 'transportation', { filter: ['match', cls, ['motorway', 'trunk', 'primary'], true, false], layout: cap,
+      paint: { 'line-color': P.glow, 'line-width': W(4 * s), 'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 4, 18, 30], 'line-opacity': 0.22 } }));
+  if (!T.glow) layers.push(L('road-shadow', 'line', 'transportation', { filter: roads, layout: cap,
+      paint: { 'line-color': '#000000', 'line-width': W(1.6 * s), 'line-blur': 3, 'line-opacity': 0.12, 'line-translate': [1.5, 2] } }));
   layers.push(
     L('road-case', 'line', 'transportation', { filter: roads, layout: cap, paint: { 'line-color': P.roadCase, 'line-width': W(1.35 * s) } }),
     L('road', 'line', 'transportation', { filter: roads, layout: cap, paint: { 'line-color': roadColor, 'line-width': W(s) } }),
@@ -115,6 +139,10 @@ function buildStyle(T, src, glyphs, opt) {
                 'text-size': ['match', cls, ['city', 'town'], 18, 'suburb', 14, 12], 'text-letter-spacing': T.upcase ? 0.16 : 0.04, 'text-max-width': 8 },
       paint: { 'text-color': P.label, 'text-halo-color': P.halo, 'text-halo-width': T.id === 'royale' ? 2.6 : 2 } }),
   );
-  return { version: 8, glyphs, sources: { omt: src }, layers };
+  // céu + neblina no horizonte (aparecem quando a câmera inclina) e luz que ilumina as faces dos prédios
+  const sky = { 'sky-color': T.sky.sky, 'horizon-color': T.sky.horizon, 'fog-color': T.sky.fog,
+                'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.6, 'atmosphere-blend': 0.8 };
+  const light = { anchor: 'viewport', position: [1.2, 210, 35], color: T.light.color, intensity: T.light.intensity };
+  return { version: 8, glyphs, sources: { omt: src }, sky, light, layers };
 }
 for (const k in THEMES) THEMES[k].id = k;
