@@ -7,102 +7,122 @@
 <link rel="stylesheet" href="lib/maplibre-gl.css">
 <link rel="stylesheet" href="style.css">
 </head>
-<body class="theme-arasaka">
+<body data-theme="nightcity">
 
-<!-- ═══════════ TELA DE BOOT (também serve de "primeiro toque" p/ liberar o áudio) ═══════════ -->
+<!-- ícones (vetor) reutilizados em todo o app -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.5-2.4 1a7.4 7.4 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.5A7.4 7.4 0 0 0 7 6.5l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.5 2.4-1a7.4 7.4 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 2.6-1.5l2.4 1 2-3.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4Z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4Z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 22V3M5 4h11l-2 4 2 4H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M17 10l4-2v8l-4-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="10" cy="12" r="2.4" fill="currentColor"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-crash" viewBox="0 0 24 24"><path d="M12 2l2.2 6.2L20 6l-3.2 5.4L22 14l-6 .8.6 6.2-4.6-4.2L7.4 21l.6-6.2-6-.8 5.2-2.6L4 6l5.8 2.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3 2 21h20Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 17.5v.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.5" fill="currentColor"/><circle cx="18" cy="6" r="2.5" fill="currentColor"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"/></symbol>
+  <symbol id="i-light" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="7" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="17" r="1.8" fill="currentColor"/></symbol>
+</svg>
+
+<!-- ═══════════ TELA DE ABERTURA ═══════════ -->
 <div id="boot">
   <div class="boot-box">
-    <div class="glitch" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</div>
-    <div class="boot-sub">SETOR: HORTOLÂNDIA · SP</div>
+    <div id="bootTitle" class="brand" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</div>
+    <div id="bootSub" class="boot-sub">SETOR: HORTOLÂNDIA · SP</div>
+    <div id="bootThemes" class="boot-themes"></div>
     <pre id="bootlog"></pre>
-    <button id="jackin" class="cp-btn big">▶ JACK IN</button>
+    <button id="jackin" class="btn big">▶ <span id="bootBtn">JACK IN</span></button>
   </div>
 </div>
 
 <div id="map"></div>
-<div class="scanlines"></div>
+<div class="fx-overlay"></div>
 <div id="alertFrame"></div>
 
-<!-- ═══════════ TOPO: título + busca ═══════════ -->
+<!-- ═══════════ TOPO ═══════════ -->
 <div id="top">
-  <div class="hud-title">
-    <span class="glitch small" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</span>
-    <span id="gpsStatus" class="tag">GPS: ---</span>
-    <span id="radarCount" class="tag cyan">RADARES: --</span>
+  <div class="topbar">
+    <span id="brandSmall" class="brand small" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</span>
+    <span class="spacer"></span>
+    <span id="gpsStatus" class="chip">GPS ---</span>
+    <span id="radarCount" class="chip alt">◉ --</span>
   </div>
-  <div class="search cp-panel">
-    <span class="search-ico">⌖</span>
-    <input id="q" type="search" placeholder="DESTINO / ENDEREÇO..." autocomplete="off">
-    <button id="qClear" class="x">✕</button>
+  <div class="search panel">
+    <svg class="ic"><use href="#i-search"/></svg>
+    <input id="q" type="search" placeholder="Para onde vamos?" autocomplete="off">
+    <button id="qClear" class="icon-btn" aria-label="Limpar"><svg class="ic"><use href="#i-x"/></svg></button>
   </div>
-  <div id="results" class="cp-panel hidden"></div>
+  <div id="results" class="panel hidden"></div>
 </div>
 
-<!-- ═══════════ BANNER DE MANOBRA (navegação) ═══════════ -->
-<div id="maneuver" class="cp-panel hidden">
+<!-- banner de manobra -->
+<div id="maneuver" class="panel hidden">
   <div id="mArrow">↑</div>
-  <div class="m-text">
-    <div id="mDist">---</div>
-    <div id="mInstr">---</div>
-  </div>
+  <div class="m-text"><div id="mDist">---</div><div id="mInstr">---</div></div>
 </div>
 
-<!-- ═══════════ ALERTA DE RADAR ═══════════ -->
+<!-- alerta -->
 <div id="radarAlert" class="hidden">
-  <div class="ra-ico">◉</div>
-  <div>
-    <div id="raTitle">RADAR</div>
-    <div id="raSub">---</div>
-  </div>
+  <svg class="ra-ico"><use href="#i-cam"/></svg>
+  <div><div id="raTitle">RADAR</div><div id="raSub">---</div></div>
 </div>
 
-<!-- ═══════════ VELOCÍMETRO ═══════════ -->
+<!-- velocímetro + placa + rua atual -->
 <div id="speedo">
-  <svg viewBox="0 0 120 120">
-    <circle class="sp-bg" cx="60" cy="60" r="50"/>
-    <circle id="spArc" class="sp-arc" cx="60" cy="60" r="50"/>
-  </svg>
+  <svg viewBox="0 0 120 120"><circle class="sp-bg" cx="60" cy="60" r="50"/><circle id="spArc" class="sp-arc" cx="60" cy="60" r="50"/></svg>
   <div class="sp-num"><span id="spVal">0</span><small>KM/H</small></div>
-  <div id="spLimit" class="hidden">--</div>
+  <div id="spLimit" class="hidden"><span id="spLimitVal">--</span><i id="spLimitEst">est.</i></div>
 </div>
+<div id="roadName" class="hidden"></div>
 
-<!-- ═══════════ BOTÕES LATERAIS ═══════════ -->
+<!-- botões laterais -->
 <div id="fab">
-  <button id="bFollow" class="cp-btn sq active" title="Seguir">◎</button>
-  <button id="b3d"     class="cp-btn sq txt" title="3D / 2D">3D</button>
-  <button id="bRadar"  class="cp-btn sq" title="Atualizar radares">⟳</button>
-  <button id="bTheme"  class="cp-btn sq" title="Tema">◐</button>
-  <button id="bMute"   class="cp-btn sq" title="Voz">🔊</button>
+  <button id="bFollow" class="fab active" aria-label="Seguir"><svg class="ic"><use href="#i-target"/></svg></button>
+  <button id="b3d" class="fab txt" aria-label="3D ou 2D">3D</button>
+  <button id="bMute" class="fab" aria-label="Som"><svg class="ic"><use id="muteIcon" href="#i-vol"/></svg></button>
+  <button id="bMenu" class="fab" aria-label="Configurações"><svg class="ic"><use href="#i-gear"/></svg></button>
 </div>
 
-<!-- ═══════════ BARRA INFERIOR (rota) ═══════════ -->
-<div id="tripBar" class="cp-panel hidden">
+<!-- barra da viagem -->
+<div id="tripBar" class="panel hidden">
   <div class="tb-cell" id="tbEtaCell"><b id="tbEta">--</b><small>MIN ⓘ</small></div>
   <div class="tb-cell"><b id="tbDist">--</b><small>KM</small></div>
   <div class="tb-cell"><b id="tbSig">--</b><small>SEMÁF.</small></div>
   <div class="tb-cell"><b id="tbArr">--:--</b><small>CHEGADA</small></div>
-  <button id="bGo" class="cp-btn">INICIAR</button>
-  <button id="bCancel" class="cp-btn red">✕</button>
+  <button id="bGo" class="btn">IR</button>
+  <button id="bCancel" class="btn danger" aria-label="Cancelar"><svg class="ic"><use href="#i-x"/></svg></button>
 </div>
 
-<!-- ═══════════ MENU DE REPORTE (toque longo no mapa) ═══════════ -->
-<div id="reportMenu" class="cp-panel hidden">
-  <div class="rm-title">// MARCAR PONTO</div>
-  <button class="cp-btn" data-type="route">⌖ ROTA ATÉ AQUI</button>
-  <button class="cp-btn" data-type="radar">◉ RADAR</button>
-  <button class="cp-btn" data-type="police">⛨ POLÍCIA</button>
-  <button class="cp-btn" data-type="accident">✸ ACIDENTE</button>
-  <button class="cp-btn" data-type="hazard">⚠ PERIGO / BURACO</button>
-  <div id="rmSpeedRow">
-    LIMITE DO RADAR:
-    <select id="rmSpeed"><option>30</option><option>40</option><option>50</option><option selected>60</option><option>70</option><option>80</option><option>90</option><option>100</option><option>110</option><option>120</option></select>
+<!-- menu do toque longo -->
+<div id="reportMenu" class="panel hidden">
+  <div class="rm-title">MARCAR NESTE PONTO</div>
+  <div class="rm-grid">
+    <button class="rm-item" data-type="route"><svg class="ic"><use href="#i-route"/></svg>Rota até aqui</button>
+    <button class="rm-item" data-type="radar"><svg class="ic"><use href="#i-cam"/></svg>Radar</button>
+    <button class="rm-item" data-type="police"><svg class="ic"><use href="#i-shield"/></svg>Polícia</button>
+    <button class="rm-item" data-type="accident"><svg class="ic"><use href="#i-crash"/></svg>Acidente</button>
+    <button class="rm-item" data-type="hazard"><svg class="ic"><use href="#i-warn"/></svg>Perigo/Buraco</button>
+    <button class="rm-item ghost" data-type="close"><svg class="ic"><use href="#i-x"/></svg>Fechar</button>
   </div>
-  <button class="cp-btn red" data-type="close">FECHAR</button>
+  <label id="rmSpeedRow">Limite do radar
+    <select id="rmSpeed"><option>30</option><option>40</option><option>50</option><option selected>60</option><option>70</option><option>80</option><option>90</option><option>100</option><option>110</option><option>120</option></select>
+  </label>
+</div>
+
+<!-- ═══════════ CONFIGURAÇÕES ═══════════ -->
+<div id="sheetBack" class="hidden"></div>
+<div id="sheet" class="panel">
+  <div class="sheet-grip"></div>
+  <div class="sheet-head"><span>Configurações</span><button id="sheetClose" class="icon-btn" aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button></div>
+  <div id="sheetBody"></div>
 </div>
 
 <div id="toast" class="hidden"></div>
 
 <script src="lib/maplibre-gl.js"></script>
+<script src="themes.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
