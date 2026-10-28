@@ -1,0 +1,145 @@
+/* ════════════════════════════════════════════════════════════
+   NIGHTCITY//NAV — visual estilo HUD Cyberpunk
+   Paleta: amarelo "Samurai", ciano "netrunner", vermelho "Arasaka"
+   ════════════════════════════════════════════════════════════ */
+@font-face{font-family:Orbitron;src:url(fonts/orbitron-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:Orbitron;src:url(fonts/orbitron-latin-700-normal.woff2) format("woff2");font-weight:700}
+@font-face{font-family:Orbitron;src:url(fonts/orbitron-latin-900-normal.woff2) format("woff2");font-weight:900}
+@font-face{font-family:Rajdhani;src:url(fonts/rajdhani-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:Rajdhani;src:url(fonts/rajdhani-latin-700-normal.woff2) format("woff2");font-weight:700}
+
+:root{
+  --yellow:#fcee0a; --cyan:#00f0ff; --red:#ff003c; --magenta:#ff2a6d;
+  --bg:#07070d; --panel:rgba(8,8,16,.86); --line:rgba(252,238,10,.55);
+  --accent:var(--yellow);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:#e8e8f0;font-family:Rajdhani,sans-serif;overflow:hidden;user-select:none}
+#map{position:fixed;inset:0;background:#05050a}
+
+/* ── Filtros de cor nos "tiles" do mapa = o que dá o clima neon ──
+   O mapa base é cinza-escuro; sepia() + saturate() + hue-rotate()
+   "pintam" as ruas. Tema Arasaka = vermelho/laranja; Netrunner = ciano. */
+.theme-arasaka .leaflet-tile-pane{filter:sepia(1) saturate(5) hue-rotate(-28deg) brightness(.85) contrast(1.25)}
+.theme-netrunner .leaflet-tile-pane{filter:sepia(1) saturate(4) hue-rotate(140deg) brightness(.9) contrast(1.3)}
+.theme-netrunner{--accent:var(--cyan);--line:rgba(0,240,255,.55)}
+.leaflet-container{background:#05050a;font-family:Rajdhani,sans-serif}
+.leaflet-control-attribution{background:rgba(0,0,0,.6)!important;color:#777!important;font-size:9px}
+.leaflet-control-attribution a{color:#999!important}
+
+/* linhas de varredura de monitor CRT */
+.scanlines{pointer-events:none;position:fixed;inset:0;z-index:500;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+
+/* ── painéis com cantos cortados (clip-path) ── */
+.cp-panel{background:var(--panel);border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
+  box-shadow:0 0 18px rgba(0,0,0,.6)}
+.cp-btn{font-family:Orbitron,sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;color:var(--bg);
+  background:var(--accent);border:0;padding:10px 14px;cursor:pointer;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.cp-btn:active{filter:brightness(1.4)}
+.cp-btn.red{background:var(--red);color:#fff}
+.cp-btn.big{font-size:18px;padding:16px 34px;margin-top:18px}
+.cp-btn.sq{width:48px;height:48px;padding:0;font-size:20px;background:var(--panel);color:var(--accent);border:1px solid var(--line)}
+.cp-btn.sq.active{background:var(--accent);color:var(--bg)}
+.hidden{display:none!important}
+.tag{font-family:Orbitron;font-size:9px;font-weight:700;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);background:rgba(0,0,0,.6)}
+.tag.cyan{border-color:var(--cyan);color:var(--cyan)}
+.tag.bad{border-color:var(--red);color:var(--red)}
+
+/* ── texto com glitch (duas cópias deslocadas em ciano/vermelho) ── */
+.glitch{position:relative;font-family:Orbitron;font-weight:900;font-size:30px;color:var(--yellow);letter-spacing:2px}
+.glitch.small{font-size:13px}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;overflow:hidden}
+.glitch::before{color:var(--cyan);animation:gl1 2.6s infinite steps(1);clip-path:inset(0 0 55% 0)}
+.glitch::after{color:var(--red);animation:gl2 3.1s infinite steps(1);clip-path:inset(55% 0 0 0)}
+@keyframes gl1{0%,92%{transform:none}93%{transform:translate(-3px,1px)}96%{transform:translate(2px,-1px)}}
+@keyframes gl2{0%,88%{transform:none}89%{transform:translate(3px,0)}94%{transform:translate(-2px,1px)}}
+
+/* ── boot ── */
+#boot{position:fixed;inset:0;z-index:2000;background:radial-gradient(circle at 50% 40%,#1a0610,#05050a 70%);display:flex;align-items:center;justify-content:center}
+.boot-box{text-align:center;padding:20px}
+.boot-sub{font-family:Orbitron;font-size:11px;color:var(--cyan);letter-spacing:3px;margin-top:6px}
+#bootlog{text-align:left;font-family:monospace;font-size:11px;color:#8f8;min-height:90px;margin:18px auto 0;width:260px;white-space:pre-wrap}
+
+/* ── topo ── */
+#top{position:fixed;top:calc(8px + env(safe-area-inset-top));left:10px;right:10px;z-index:900}
+.hud-title{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.search{display:flex;align-items:center;padding:4px 8px}
+.search-ico{color:var(--accent);font-size:20px;margin-right:6px}
+#q{flex:1;background:transparent;border:0;outline:0;color:#fff;font-family:Rajdhani;font-weight:700;font-size:17px;padding:8px 0;letter-spacing:1px}
+#q::placeholder{color:#777}
+.x{background:none;border:0;color:#888;font-size:18px}
+#results{margin-top:4px;max-height:45vh;overflow:auto}
+.res{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.07);font-size:15px}
+.res b{color:var(--accent);display:block;font-size:16px}
+.res small{color:#999}
+.res:active{background:rgba(252,238,10,.12)}
+
+/* ── banner de manobra ── */
+#maneuver{position:fixed;z-index:880;left:10px;right:10px;top:calc(110px + env(safe-area-inset-top));display:flex;align-items:center;gap:12px;padding:10px 14px;border-left:4px solid var(--accent)}
+#mArrow{font-size:46px;color:var(--accent);width:56px;text-align:center;text-shadow:0 0 12px var(--accent)}
+#mDist{font-family:Orbitron;font-weight:900;font-size:24px;color:#fff}
+#mInstr{font-size:17px;font-weight:700;color:var(--cyan);line-height:1.1}
+
+/* ── alerta de radar ── */
+#radarAlert{position:fixed;z-index:950;left:50%;transform:translateX(-50%);top:42%;display:flex;gap:12px;align-items:center;
+  background:rgba(40,0,10,.92);border:2px solid var(--red);padding:12px 20px;color:#fff;animation:pulse .6s infinite alternate;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.ra-ico{font-size:40px;color:var(--red)}
+#raTitle{font-family:Orbitron;font-weight:900;font-size:20px;color:var(--red)}
+#raSub{font-size:18px;font-weight:700}
+@keyframes pulse{from{box-shadow:0 0 6px var(--red)}to{box-shadow:0 0 30px var(--red)}}
+#alertFrame{pointer-events:none;position:fixed;inset:0;z-index:600;border:0 solid var(--red);transition:border-width .2s}
+#alertFrame.on{border-width:8px;animation:frame .5s infinite alternate}
+@keyframes frame{from{border-color:rgba(255,0,60,.3)}to{border-color:rgba(255,0,60,1)}}
+
+/* ── velocímetro ── */
+#speedo{position:fixed;z-index:880;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));width:116px;height:116px}
+#speedo svg{width:100%;height:100%;transform:rotate(135deg)}
+.sp-bg,.sp-arc{fill:rgba(5,5,10,.85);stroke-width:8;stroke-linecap:butt}
+.sp-bg{stroke:rgba(255,255,255,.1);stroke-dasharray:235.6 314.2}
+.sp-arc{fill:none;stroke:var(--accent);stroke-dasharray:0 314.2;transition:stroke-dasharray .4s,stroke .3s;filter:drop-shadow(0 0 4px var(--accent))}
+#speedo.over .sp-arc{stroke:var(--red);filter:drop-shadow(0 0 6px var(--red))}
+.sp-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#spVal{font-family:Orbitron;font-weight:900;font-size:34px;color:#fff;line-height:1}
+#speedo.over #spVal{color:var(--red)}
+.sp-num small{font-family:Orbitron;font-size:9px;color:var(--accent);letter-spacing:2px}
+#spLimit{position:absolute;right:-8px;top:-6px;width:40px;height:40px;border-radius:50%;background:#fff;border:5px solid var(--red);
+  color:#000;font-family:Orbitron;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+
+/* ── botões laterais ── */
+#fab{position:fixed;z-index:880;right:10px;bottom:calc(90px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+
+/* ── barra inferior ── */
+#tripBar{position:fixed;z-index:890;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:6px;padding:8px 10px}
+.tb-cell{flex:1;text-align:center}
+.tb-cell b{display:block;font-family:Orbitron;font-weight:900;font-size:19px;color:var(--accent)}
+.tb-cell small{font-family:Orbitron;font-size:8px;color:#aaa;letter-spacing:1px}
+
+/* ── menu de reporte ── */
+#reportMenu{position:fixed;z-index:1000;left:50%;top:50%;transform:translate(-50%,-50%);width:250px;padding:14px;display:flex;flex-direction:column;gap:7px}
+.rm-title{font-family:Orbitron;font-size:12px;color:var(--accent);margin-bottom:4px}
+#reportMenu .cp-btn{text-align:left}
+#rmSpeedRow{font-size:13px;color:#ccc;display:flex;align-items:center;justify-content:space-between}
+#rmSpeed{background:#111;color:var(--accent);border:1px solid var(--line);font-family:Orbitron;padding:4px}
+
+#toast{position:fixed;z-index:1500;left:50%;transform:translateX(-50%);bottom:calc(225px + env(safe-area-inset-bottom));background:var(--panel);
+  border:1px solid var(--cyan);color:var(--cyan);font-family:Orbitron;font-size:11px;padding:8px 14px;max-width:90vw;text-align:center}
+
+/* ── marcadores no mapa ── */
+.player{width:44px;height:44px}
+.player svg{width:44px;height:44px;transition:transform .5s;filter:drop-shadow(0 0 6px var(--cyan))}
+.mk{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;
+  background:rgba(5,5,10,.9);border:2px solid;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.mk.radar{border-color:var(--red);color:var(--red);font-family:Orbitron;font-size:10px}
+.mk.radar.user{color:var(--magenta)}
+.mk.police{border-color:#3b8cff;color:#3b8cff}
+.mk.accident{border-color:#ff8a00;color:#ff8a00}
+.mk.hazard{border-color:var(--yellow);color:var(--yellow)}
+.mk.dest{border-color:var(--cyan);color:var(--cyan);font-size:18px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:#eee;border:1px solid var(--line);border-radius:0}
+.leaflet-popup-content{font-family:Rajdhani;font-size:15px;margin:10px 12px}
+.leaflet-popup-content b{color:var(--accent);font-family:Orbitron;font-size:12px}
+.leaflet-popup-content .cp-btn{margin-top:8px;font-size:10px;padding:6px 10px}

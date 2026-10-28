@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>NightCity Nav</title>
+<link rel="stylesheet" href="lib/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-arasaka">
+
+<!-- ═══════════ TELA DE BOOT (também serve de "primeiro toque" p/ liberar o áudio) ═══════════ -->
+<div id="boot">
+  <div class="boot-box">
+    <div class="glitch" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</div>
+    <div class="boot-sub">SETOR: HORTOLÂNDIA · SP</div>
+    <pre id="bootlog"></pre>
+    <button id="jackin" class="cp-btn big">▶ JACK IN</button>
+  </div>
+</div>
+
+<div id="map"></div>
+<div class="scanlines"></div>
+<div id="alertFrame"></div>
+
+<!-- ═══════════ TOPO: título + busca ═══════════ -->
+<div id="top">
+  <div class="hud-title">
+    <span class="glitch small" data-text="NIGHTCITY//NAV">NIGHTCITY//NAV</span>
+    <span id="gpsStatus" class="tag">GPS: ---</span>
+    <span id="radarCount" class="tag cyan">RADARES: --</span>
+  </div>
+  <div class="search cp-panel">
+    <span class="search-ico">⌖</span>
+    <input id="q" type="search" placeholder="DESTINO / ENDEREÇO..." autocomplete="off">
+    <button id="qClear" class="x">✕</button>
+  </div>
+  <div id="results" class="cp-panel hidden"></div>
+</div>
+
+<!-- ═══════════ BANNER DE MANOBRA (navegação) ═══════════ -->
+<div id="maneuver" class="cp-panel hidden">
+  <div id="mArrow">↑</div>
+  <div class="m-text">
+    <div id="mDist">---</div>
+    <div id="mInstr">---</div>
+  </div>
+</div>
+
+<!-- ═══════════ ALERTA DE RADAR ═══════════ -->
+<div id="radarAlert" class="hidden">
+  <div class="ra-ico">◉</div>
+  <div>
+    <div id="raTitle">RADAR</div>
+    <div id="raSub">---</div>
+  </div>
+</div>
+
+<!-- ═══════════ VELOCÍMETRO ═══════════ -->
+<div id="speedo">
+  <svg viewBox="0 0 120 120">
+    <circle class="sp-bg" cx="60" cy="60" r="50"/>
+    <circle id="spArc" class="sp-arc" cx="60" cy="60" r="50"/>
+  </svg>
+  <div class="sp-num"><span id="spVal">0</span><small>KM/H</small></div>
+  <div id="spLimit" class="hidden">--</div>
+</div>
+
+<!-- ═══════════ BOTÕES LATERAIS ═══════════ -->
+<div id="fab">
+  <button id="bFollow" class="cp-btn sq active" title="Seguir">◎</button>
+  <button id="bRadar"  class="cp-btn sq" title="Atualizar radares">⟳</button>
+  <button id="bTheme"  class="cp-btn sq" title="Tema">◐</button>
+  <button id="bMute"   class="cp-btn sq" title="Voz">🔊</button>
+</div>
+
+<!-- ═══════════ BARRA INFERIOR (rota) ═══════════ -->
+<div id="tripBar" class="cp-panel hidden">
+  <div class="tb-cell"><b id="tbEta">--</b><small>MIN</small></div>
+  <div class="tb-cell"><b id="tbDist">--</b><small>KM</small></div>
+  <div class="tb-cell"><b id="tbArr">--:--</b><small>CHEGADA</small></div>
+  <button id="bGo" class="cp-btn">INICIAR</button>
+  <button id="bCancel" class="cp-btn red">✕</button>
+</div>
+
+<!-- ═══════════ MENU DE REPORTE (toque longo no mapa) ═══════════ -->
+<div id="reportMenu" class="cp-panel hidden">
+  <div class="rm-title">// MARCAR PONTO</div>
+  <button class="cp-btn" data-type="route">⌖ ROTA ATÉ AQUI</button>
+  <button class="cp-btn" data-type="radar">◉ RADAR</button>
+  <button class="cp-btn" data-type="police">⛨ POLÍCIA</button>
+  <button class="cp-btn" data-type="accident">✸ ACIDENTE</button>
+  <button class="cp-btn" data-type="hazard">⚠ PERIGO / BURACO</button>
+  <div id="rmSpeedRow">
+    LIMITE DO RADAR:
+    <select id="rmSpeed"><option>30</option><option>40</option><option>50</option><option selected>60</option><option>70</option><option>80</option><option>90</option><option>100</option><option>110</option><option>120</option></select>
+  </div>
+  <button class="cp-btn red" data-type="close">FECHAR</button>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script src="lib/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
