@@ -15,6 +15,7 @@ permissions:
 jobs:
   radars:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +23,7 @@ jobs:
           node-version: '20'
       - name: Calcular radares
         run: node scripts/build-radars.mjs
+        continue-on-error: true
       - name: Salvar no repositório
         run: |
           git config user.name "radar-bot"

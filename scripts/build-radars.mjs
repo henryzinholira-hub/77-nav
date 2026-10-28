@@ -50,7 +50,7 @@ async function overpass(q, label) {
   for (const url of OVERPASS) for (let tent = 1; tent <= 2; tent++) {
     const t0 = Date.now();
     try {
-      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA } });
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }, signal: AbortSignal.timeout(150000) });
       const txt = await r.text();
       console.log(`[overpass] ${label} ${url} tentativa ${tent}: HTTP ${r.status} em ${Date.now() - t0} ms, ${txt.length} bytes`);
       if (r.ok) return JSON.parse(txt).elements;
@@ -62,33 +62,30 @@ async function overpass(q, label) {
 async function nominatim(q) {
   const [s, w, n, e] = BBOX;
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&viewbox=${w},${n},${e},${s}&bounded=1&q=${encodeURIComponent(q)}`;
-  const r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'pt-BR' } });
+  let r; try { r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'pt-BR' }, signal: AbortSignal.timeout(20000) }); } catch (e) { console.log(`[nominatim] "${q}" erro ${e.message}`); await sleep(1200); return null; }
   await sleep(1200);                                       // regra do Nominatim: 1 busca por segundo
   if (!r.ok) { console.log(`[nominatim] "${q}" HTTP ${r.status}`); return null; }
   const j = await r.json(); console.log(`[nominatim] "${q}" → ${j[0] ? j[0].display_name : 'nada'}`);
   return j[0] ? [+j[0].lat, +j[0].lon] : null;
 }
 
-// 1) diagnóstico: a MESMA consulta que o app v3 fazia no celular (para descobrir por que falhava)
 const report = [];
-{
-  const pats = ['Ol.vio Franceschini', 'Jo.o Mendes', 'Sabina', 'Emancipa..o'];
-  const q = `[out:json][timeout:90];area["name"="Hortolândia"]["admin_level"="8"]->.h;way(area.h)["highway"]["name"~"${pats.map(p => `(${p})`).join('|')}",i];out tags;`;
-  try { const els = await overpass(q, 'diagnóstico-regex-do-app'); const names = [...new Set(els.map(e => e.tags?.name))]; report.push(`diag: consulta antiga achou ${names.length} nomes: ${names.join(' | ')}`); }
-  catch (e) { report.push('diag: consulta antiga FALHOU: ' + e.message); }
-}
-
+const T0 = Date.now();
 // 2) todas as ruas com nome da cidade (comparação de nomes feita aqui, com acento correto)
 const [s, w, n, e] = BBOX, bb = `${s},${w},${n},${e}`;
-const streets = await overpass(`[out:json][timeout:180];area["name"="Hortolândia"]["admin_level"="8"]->.h;way(area.h)["highway"]["name"];out body geom;`, 'ruas');
+// tenta pela área oficial do município; se falhar, pela caixa retangular (mais leve para o servidor)
+let streets = [];
+try { streets = await overpass(`[out:json][timeout:120];area["name"="Hortolândia"]["admin_level"="8"]->.h;way(area.h)["highway"]["name"];out body geom;`, 'ruas-area'); }
+catch { try { streets = await overpass(`[out:json][timeout:120];way["highway"]["name"](-22.89,-47.27,-22.82,-47.16);out body geom;`, 'ruas-bbox'); } catch (e) { report.push('FALHA ao baixar ruas: ' + e.message); } }
 const ways = streets.filter(x => x.type === 'way' && x.geometry).map(x => ({ name: x.tags.name, hw: x.tags.highway, nodes: x.nodes, geom: x.geometry.map(g => [g.lat, g.lon]) }));
 report.push(`ruas com nome na cidade: ${ways.length}`);
 
 // 3) semáforos + câmeras já cadastradas no OSM
-const extra = await overpass(`[out:json][timeout:120];area["name"="Hortolândia"]["admin_level"="8"]->.h;
+let extra = [];
+try { extra = await overpass(`[out:json][timeout:120];area["name"="Hortolândia"]["admin_level"="8"]->.h;
   node(area.h)["highway"="traffic_signals"]; out body;
   (node["highway"="speed_camera"](${bb}); node["enforcement"](${bb}); relation["type"="enforcement"](${bb}););
-  out body; >; out skel qt;`, 'semaforos+cameras');
+  out body; >; out skel qt;`, 'semaforos+cameras'); } catch (e) { report.push('FALHA semáforos/câmeras: ' + e.message); }
 const signals = extra.filter(x => x.type === 'node' && x.tags?.highway === 'traffic_signals').map(x => [r6(x.lat), r6(x.lon)]);
 const nodes = Object.fromEntries(extra.filter(x => x.type === 'node').map(x => [x.id, x]));
 const lim = t => { const m = String(t?.maxspeed || '').match(/\d+/); return m ? +m[0] : null; };
@@ -132,7 +129,17 @@ for (const sd of SEED) {
     report.push(`~ ${sd.id} ${sd.label}: zona (${names.join('/')}, ${A.length} trechos)`);
   }
 }
+// 1) diagnóstico: a MESMA consulta que o app v3 fazia no celular (para descobrir por que falhava)
+{
+  const pats = ['Ol.vio Franceschini', 'Jo.o Mendes', 'Sabina', 'Emancipa..o'];
+  const q = `[out:json][timeout:90];area["name"="Hortolândia"]["admin_level"="8"]->.h;way(area.h)["highway"]["name"~"${pats.map(p => `(${p})`).join('|')}",i];out tags;`;
+  try { const els = await overpass(q, 'diagnóstico-regex-do-app'); const names = [...new Set(els.map(e => e.tags?.name))]; report.push(`diag: consulta antiga achou ${names.length} nomes: ${names.join(' | ')}`); }
+  catch (e) { report.push('diag: consulta antiga FALHOU: ' + e.message); }
+}
+
+
 const out = { v: 3, generated: new Date().toISOString(), radars, zones, signals, missing, report };
 writeFileSync('app/src/main/assets/radars.json', JSON.stringify(out));
 console.log(report.join('\n'));
+report.push(`tempo total: ${Math.round((Date.now() - T0) / 1000)} s`);
 console.log(`\nTOTAL: ${radars.length} radares (pontos), ${zones.length} vias-zona, ${signals.length} semáforos`);
